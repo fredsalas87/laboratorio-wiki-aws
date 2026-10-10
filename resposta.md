@@ -202,16 +202,16 @@ Defina quais metadados você extrairia de cada documento.
 
 | Metadado | Por que ele é importante? |
 |---|---|
-| Nome do documento | Preencha aqui |
-| Tipo do documento | Preencha aqui |
-| Data identificada | Preencha aqui |
-| Tema principal | Preencha aqui |
-| Participantes | Preencha aqui |
-| Decisões tomadas | Preencha aqui |
-| Responsáveis | Preencha aqui |
-| Próximos passos | Preencha aqui |
-| Nível de confidencialidade | Preencha aqui |
-| Caminho do arquivo original | Preencha aqui |
+| Nome do documento | Identifica a origem exata do arquivo. |
+| Tipo do documento | Classifica entre ata de reunião, relatório ou tabela. |
+| Data identificada | Permite filtrar buscas por período ou cronologia. |
+| Tema principal | Categoriza o assunto central tratado. |
+| Participantes | Mapeia quem esteve presente nas reuniões. |
+| Decisões tomadas | Registra os combinados finais para consultas rápidas. |
+| Responsáveis | Vincula tarefas e pendências às pessoas corretas. |
+| Próximos passos | Permite acompanhar prazos e ações futuras. |
+| Nível de confidencialidade | Garante controle de acesso a dados restritos. |
+| Caminho do arquivo original | Permite que a IA cite o link direto do documento no S3. |
 
 Adicione outros metadados, se necessário.
 
