@@ -9,13 +9,13 @@
 ## 👤 Identificação
 
 **Nome:**  
-Preencha aqui
+Fredy Salazar
 
 **Data:**  
-Preencha aqui
+10/10/2026
 
 **Link do repositório:**  
-Preencha aqui
+(https://github.com/fredsalas87/laboratorio-wiki-aws)
 
 ---
 
@@ -36,7 +36,9 @@ Exemplo de como responder, com o formato e o que ele implica:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+- `.pdf` (`ata_reuniao_vendas_sa.pdf`): Nasce digital (com camada de texto). É possível extrair o texto corrido diretamente sem gastar com OCR.
+- `.png` (`ata_resultados_vendas_novos_dados.png`): Imagem digitalizada (apenas pixels). Precisa obrigatoriamente de OCR para extrair as letras da imagem.
+- `.csv` (`vendas_sa_dados_ficticios_laboratorio.csv`): Dados estruturados em tabela (CRM). É possível extrair colunas e linhas para transformar em textos explicativos ou JSON.
 ```
 
 ---
@@ -57,7 +59,10 @@ Exemplo:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+- Mistura de formatos diferentes dentro da mesma pasta sem organização prévia.
+- Arquivos de imagem (`.png`) que dependem de leitura de caracteres por computador e podem conter falhas de nitidez.
+- Arquivos de tabela (`.csv`) que não possuem texto corrido e precisam ser convertidos em frases para a IA entender.
+- Documentos longos em PDF com quebras de páginas, tópicos e listas de participantes espalhados.
 ```
 
 ---
@@ -69,7 +74,13 @@ Liste quais informações precisam ser identificadas para transformar os documen
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+- Datas das reuniões e eventos.
+- Lista de participantes e áreas envolvidas.
+- Temas e tópicos principais discutidos.
+- Decisões tomadas e aprovadas.
+- Pessoas responsáveis por cada tarefa.
+- Prazos, pendências, riscos e próximos passos.
+- Valores e status de oportunidades do CRM (no caso do CSV).
 ```
 
 ---
@@ -81,7 +92,10 @@ Como você classificaria os documentos sem depender de subpastas dentro de `raw/
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+A classificação será feita de forma automática na entrada usando **Tags do Amazon S3** e metadados lidos pela extensão do arquivo via **AWS Lambda**:
+- Arquivos `.pdf` recebem a Tag `Tipo=Documento-PDF`.
+- Arquivos `.png` recebem a Tag `Tipo=Imagem-OCR`.
+- Arquivos `.csv` recebem a Tag `Tipo=Tabela-CRM`.
 ```
 
 ---
@@ -103,7 +117,7 @@ Serviços que você pode considerar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Os arquivos serão enviados diretamente para um bucket do **Amazon S3** chamado `s3://wiki-corporativa-dados/raw/`. O acesso a esse bucket será protegido por políticas do **AWS IAM** para que apenas pessoas autorizadas façam o upload, e todos os dados serão criptografados em repouso usando o **AWS KMS**.
 ```
 
 ---
@@ -115,7 +129,7 @@ Explique como garantir que os arquivos originais sejam mantidos intactos e rastr
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+A pasta `raw/` no Amazon S3 será mantida como uma área somente de leitura para processamentos. Ativaremos o **Amazon S3 Versioning** (Versioning de objetos) para evitar que arquivos sejam sobrescritos ou apagados acidentalmente. Qualquer arquivo alterado ou limpo será salvo em outra pasta separada (`s3://wiki-corporativa-dados/processed/`).
 ```
 
 ---
@@ -144,7 +158,11 @@ Serviços que você pode considerar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Assim que um arquivo chega no S3, um evento dispara uma função **AWS Lambda** operada em um fluxo do **AWS Step Functions**:
+- **PDFs e Imagens escaneadas (`.png`)**: O fluxo envia o arquivo para o **Amazon Textract**, que usa visão computacional para ler a imagem e retornar o texto digitado.
+- **PDFs digitais (`.pdf`)**: A função Lambda usa bibliotecas Python simples para ler a camada de texto diretamente do PDF, sem precisar acionar o Textract, reduzindo custos.
+- **Arquivos `.csv`**: O Lambda lê as linhas da tabela e as formata em textos curtos estruturados (ex: "A oportunidade X do cliente Y está com o status Z").
+- **Arquivos `.txt`, `.docx`, `.md`**: O Lambda faz a leitura nativa do texto diretamente.
 ```
 
 ---
@@ -156,7 +174,7 @@ Explique como sua solução identificaria e registraria erros de processamento.
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Todas as execuções do Lambda e Step Functions serão monitoradas pelo **Amazon CloudWatch**. Caso um arquivo esteja corrompido ou o OCR falhe, a mensagem de erro será gravada nos logs do CloudWatch e o arquivo com falha será enviado para uma fila de refazer/análise chamada **Amazon SQS DLQ (Dead-Letter Queue)**.
 ```
 
 ---
@@ -170,7 +188,10 @@ Explique como os textos extraídos seriam limpos, normalizados e preparados para
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Uma função **AWS Lambda** receberá o texto bruto extraído e executará um script de limpeza para:
+- Remover quebras de linha desnecessárias e espaços duplos.
+- Corrigir caracteres estranhos gerados na leitura de imagens.
+- Salvar o resultado final padronizado no formato `.txt` dentro de `s3://wiki-corporativa-dados/processed/`.
 ```
 
 ---
@@ -203,7 +224,7 @@ Explique como o Amazon Bedrock poderia ajudar a identificar temas, decisões, re
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+O **Amazon Bedrock** receberá o texto limpo e, através de um prompt instruído, um modelo de linguagem extrairá automaticamente um resumo executivo, identificará os nomes dos responsáveis, datas, temas principais e as decisões tomadas. Essa resposta da IA é estruturada em formato JSON pronto para indexação.
 ```
 
 ---
@@ -222,7 +243,7 @@ Serviços que você pode considerar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Os metadados extraídos em JSON serão armazenados no **Amazon DynamoDB**, um banco de dados rápido e chave-valor. A chave primária da tabela será o próprio caminho do arquivo no S3 (`s3://wiki-corporativa-dados/raw/nome_do_arquivo`), criando uma conexão direta entre os metadados e o arquivo original.
 ```
 
 ---
@@ -236,7 +257,7 @@ Explique como os documentos seriam divididos em trechos menores e preparados par
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Usaremos o **Amazon Bedrock Knowledge Bases**, que divide automaticamente os arquivos limpos da pasta `processed/` em pedaços menores (*chunks*) de aproximadamente 300 a 500 palavras. Essa divisão garante que as buscas encontrem o parágrafo exato onde uma dúvida é respondida.
 ```
 
 ---
@@ -256,7 +277,7 @@ Serviços que você pode considerar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+O **Amazon Bedrock Knowledge Bases** utiliza o modelo **Amazon Titan Text Embeddings** para converter cada trecho de texto em um vetor numérico (vetor que representa o significado das palavras). Esses vetores são armazenados automaticamente em uma base de dados vetorial usando o **Amazon OpenSearch Serverless**.
 ```
 
 ---
@@ -275,7 +296,11 @@ Considere explicar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+1. O usuário digita uma pergunta (ex: *"Quais os próximos passos do projeto de vendas?"*).
+2. O **Amazon Bedrock Knowledge Bases** busca no OpenSearch Serverless os trechos de texto mais parecidos semanticamente com a pergunta.
+3. Os trechos encontrados e a pergunta original são enviados para o modelo de linguagem no **Amazon Bedrock**.
+4. O Bedrock lê apenas aqueles documentos recuperados e gera uma resposta clara em português.
+5. A resposta final é exibida ao usuário acompanhada do link/nome do documento original no S3 utilizado como fonte.
 ```
 
 ---
@@ -295,7 +320,7 @@ Serviços que você pode considerar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+Para simplificar sem precisar codificar uma aplicação do zero, podemos disponibilizar a consulta através do **Amazon Q Business**, criando um portal de chat corporativo onde os funcionários fazem perguntas diretamente no navegador e o sistema responde usando a base do Bedrock.
 ```
 
 ---
@@ -317,7 +342,10 @@ Serviços que você pode considerar:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+- **Controle de Acesso e Autenticação**: **Amazon Cognito** ou integração do **Amazon Q Business** com o login corporativo da empresa via **AWS IAM**.
+- **Proteção dos Dados**: Criptografia de dados em repouso e em trânsito com chaves gerenciadas no **AWS KMS**.
+- **Auditoria**: O **AWS CloudTrail** registrará todas as ações, chamadas de API e consultas feitas.
+- **Monitoramento e Custos**: **Amazon CloudWatch** para alertas de erros e **AWS Cost Explorer** para controlar os gastos com chamadas de IA.
 ```
 
 ---
@@ -333,7 +361,7 @@ Explique em poucas linhas a ideia central da sua arquitetura.
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+A solução consiste em uma esteira *serverless* totalmente gerenciada pela AWS. Os documentos brutos enviados ao Amazon S3 são processados pelo Amazon Textract ou Lambda, limpos e enriquecidos com metadados via Amazon Bedrock. O conteúdo é vetorizado pelo Bedrock Knowledge Bases e disponibilizado em uma interface inteligente no Amazon Q Business com segurança total.
 ```
 
 ---
@@ -377,8 +405,14 @@ Exemplo de estrutura:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
-```
+Preencha aqui.1. Os arquivos brutos chegam na pasta `raw/` do Amazon S3.
+2. Um evento do S3 aciona o AWS Step Functions que executa o AWS Lambda.
+3. Se for imagem/PDF escaneado, o arquivo é enviado ao Amazon Textract. Se for digital ou CSV, o Lambda faz o processamento.
+4. O texto resultante é limpo e salvo em `s3://.../processed/`.
+5. O Amazon Bedrock analisa o texto e gera metadados em JSON, que são salvos no Amazon DynamoDB.
+6. O Amazon Bedrock Knowledge Bases lê o texto limpo, divide em partes, gera vetores e salva no Amazon OpenSearch Serverless.
+7. O usuário faz uma pergunta no chat do Amazon Q Business.
+8. A IA consulta a base de vetores, recupera as fontes no S3 e responde citando os documentos originais.```
 
 ---
 
@@ -395,7 +429,7 @@ raw/ → Amazon S3 → Lambda/Step Functions → Textract → S3 Processado → 
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+`raw/ (Amazon S3)` ➡️ `AWS Lambda / Step Functions` ➡️ `Amazon Textract (OCR)` ➡️ `S3 Processado` ➡️ `Amazon Bedrock (Metadados -> DynamoDB)` ➡️ `Bedrock Knowledge Bases (OpenSearch)` ➡️ `Amazon Q Business (Chat)` ➡️ `Usuário Final`
 ```
 
 ---
@@ -416,7 +450,10 @@ Exemplo:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+- Imagens em baixíssima resolução podem gerar erros na leitura do Textract.
+- Arquivos em tabela (CSV) muito grandes exigem regras bem definidas no Lambda para não poluir o modelo de IA.
+- Custos de uso da API do Amazon Bedrock e Textract devem ser acompanhados com alertas no CloudWatch.
+- Respostas geradas por IA exigem que os documentos originais estejam atualizados para evitar alucinações.
 ```
 
 ---
@@ -438,7 +475,10 @@ Exemplo:
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+- Adicionar um fluxo de aprovação humana para revisar os metadados extraídos de atas confidenciais.
+- Integrar a Wiki diretamente no Slack ou Microsoft Teams da empresa.
+- Criar alertas automáticos no e-mail para avisar responsáveis sobre pendências e prazos de reuniões perto do vencimento.
+- Criar dashboards executivos no Amazon QuickSight mostrando os temas mais discutidos nas reuniões do mês.
 ```
 
 ---
@@ -467,5 +507,5 @@ Escreva uma breve conclusão defendendo sua solução como se estivesse apresent
 **Sua resposta:**
 
 ```md
-Preencha aqui.
+A arquitetura proposta transforma dados brutos e inacessíveis em um ativo estratégico de conhecimento para a empresa. Utilizando o ecossistema Serverless da AWS e recursos gerenciados de IA como Amazon Textract e Amazon Bedrock, eliminamos a necessidade de gerenciar servidores e garantimos baixa manutenção, alta eficiência e custo proporcional ao uso. Com esta Wiki Inteligente, a empresa reduz drasticamente o tempo gasto procurando informações em arquivos antigos, garante segurança e rastreabilidade total das decisões corporativas e eleva a produtividade das equipes.
 ```
